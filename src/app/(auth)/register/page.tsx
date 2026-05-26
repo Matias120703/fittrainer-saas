@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils'
 type Role = 'trainer' | 'client'
 
 export default function RegisterPage() {
-  const supabase = createClient()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,25 +24,46 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, role } },
-    })
+    try {
+      const supabase = createClient()
 
-    if (signUpError || !data.user) {
-      setError(signUpError?.message ?? 'Error al crear la cuenta.')
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName, role },
+        },
+      })
+
+      if (signUpError) {
+        console.error('signUp error:', signUpError)
+        setError(signUpError.message)
+        setLoading(false)
+        return
+      }
+
+      if (!data.user) {
+        setError('No se pudo crear la cuenta. Intentá de nuevo.')
+        setLoading(false)
+        return
+      }
+
+      if (role === 'trainer') {
+        const { error: trainerError } = await supabase
+          .from('trainers')
+          .upsert({ id: data.user.id }, { onConflict: 'id' })
+
+        if (trainerError) {
+          console.error('trainers upsert error:', trainerError)
+        }
+      }
+
+      window.location.href = '/login'
+    } catch (err) {
+      console.error('handleRegister unexpected error:', err)
+      setError(err instanceof Error ? err.message : 'Error inesperado. Intentá de nuevo.')
       setLoading(false)
-      return
     }
-
-    // DB trigger auto-creates the profiles row from user_metadata on signup.
-    // Only insert into trainers table for trainer accounts.
-    if (role === 'trainer') {
-      await supabase.from('trainers').upsert({ id: data.user.id }, { onConflict: 'id' })
-    }
-
-    window.location.href = role === 'trainer' ? '/dashboard' : '/home'
   }
 
   return (
@@ -67,7 +87,6 @@ export default function RegisterPage() {
           style={{ background: 'oklch(0.70 0.14 82 / 0.12)' }}
         />
 
-        {/* Logo top */}
         <div className="relative z-10 flex items-center gap-3">
           <div
             className="flex h-9 w-9 items-center justify-center rounded-md"
@@ -90,7 +109,6 @@ export default function RegisterPage() {
           </span>
         </div>
 
-        {/* Contenido central */}
         <div className="relative z-10">
           <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.28em]" style={{ color: 'oklch(0.70 0.14 82 / 0.55)' }}>
             Empieza hoy
@@ -122,10 +140,7 @@ export default function RegisterPage() {
               { n: '10', label: 'Países' },
             ].map(({ n, label }) => (
               <div key={label}>
-                <p
-                  className="text-2xl font-black text-gold-gradient"
-                  style={{ fontFamily: 'var(--font-heading)' }}
-                >
+                <p className="text-2xl font-black text-gold-gradient" style={{ fontFamily: 'var(--font-heading)' }}>
                   {n}
                 </p>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'oklch(0.94 0.006 75 / 0.40)' }}>
