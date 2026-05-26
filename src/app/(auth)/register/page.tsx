@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,7 +12,6 @@ import { cn } from '@/lib/utils'
 type Role = 'trainer' | 'client'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const supabase = createClient()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -39,25 +37,13 @@ export default function RegisterPage() {
       return
     }
 
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      role,
-      full_name: fullName,
-    })
-
-    if (!profileError && role === 'trainer') {
-      await supabase.from('trainers').insert({ id: data.user.id })
+    // DB trigger auto-creates the profiles row from user_metadata on signup.
+    // Only insert into trainers table for trainer accounts.
+    if (role === 'trainer') {
+      await supabase.from('trainers').upsert({ id: data.user.id }, { onConflict: 'id' })
     }
 
-    if (profileError) {
-      setError('Error al crear el perfil.')
-      setLoading(false)
-      return
-    }
-
-    if (role === 'trainer') router.push('/dashboard')
-    else router.push('/home')
-    router.refresh()
+    window.location.href = role === 'trainer' ? '/dashboard' : '/home'
   }
 
   return (
