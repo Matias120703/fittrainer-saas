@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  --font-heading: var(--font-barlow);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ─── DESIGN SYSTEM: DZ — Dorado sobre negro cálido ─── */
+/* Inspirado en la marca de Lic. Danny Domínguez: #8B6D3A → #F0E9BA */
+:root {
+  /* Fondos: negro cálido con sutil calor ámbar — como el interior de un gym premium */
+  --background: oklch(0.08 0.008 65);
+  --foreground: oklch(0.94 0.006 75);
+  --card: oklch(0.12 0.007 65);
+  --card-foreground: oklch(0.94 0.006 75);
+  --popover: oklch(0.14 0.007 65);
+  --popover-foreground: oklch(0.94 0.006 75);
+
+  /* Primary: Dorado de la marca DZ — el color del logo, los títulos, el badge */
+  --primary: oklch(0.70 0.14 82);
+  --primary-foreground: oklch(0.10 0.006 65);
+
+  /* Secondary / Muted */
+  --secondary: oklch(0.16 0.007 65);
+  --secondary-foreground: oklch(0.94 0.006 75);
+  --muted: oklch(0.16 0.007 65);
+  --muted-foreground: oklch(0.52 0.010 72);
+  --accent: oklch(0.16 0.007 65);
+  --accent-foreground: oklch(0.94 0.006 75);
+
+  /* Semantic */
+  --destructive: oklch(0.62 0.22 25);
+
+  /* Structure */
+  --border: oklch(0.21 0.008 68);
+  --input: oklch(0.15 0.007 65);
+  --ring: oklch(0.70 0.14 82);
+
+  /* Charts — dorado como chart-1, complementarios cálidos */
+  --chart-1: oklch(0.70 0.14 82);
+  --chart-2: oklch(0.65 0.16 175);
+  --chart-3: oklch(0.68 0.15 45);
+  --chart-4: oklch(0.60 0.18 300);
+  --chart-5: oklch(0.58 0.18 22);
+
+  /* Radius más ajustado — look premium */
+  --radius: 0.5rem;
+
+  /* Sidebar — ligeramente más oscuro que el background */
+  --sidebar: oklch(0.06 0.007 65);
+  --sidebar-foreground: oklch(0.94 0.006 75);
+  --sidebar-primary: oklch(0.70 0.14 82);
+  --sidebar-primary-foreground: oklch(0.10 0.006 65);
+  --sidebar-accent: oklch(0.12 0.007 65);
+  --sidebar-accent-foreground: oklch(0.94 0.006 75);
+  --sidebar-border: oklch(0.18 0.007 65);
+  --sidebar-ring: oklch(0.70 0.14 82);
+}
+
+html {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* Sutil brillo dorado en las esquinas — como focos de gym dirigidos */
+    background-image:
+      radial-gradient(ellipse 65% 45% at 8% 92%, oklch(0.70 0.14 82 / 0.06) 0%, transparent 100%),
+      radial-gradient(ellipse 45% 35% at 92% 8%, oklch(0.70 0.14 82 / 0.04) 0%, transparent 100%);
+  }
+  html {
+    @apply font-sans;
+  }
+  /* Barlow Condensed para headings — condensado, atlético, como la tipografía de Danny */
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+  }
+  /* Selección de texto en dorado */
+  ::selection {
+    background: oklch(0.70 0.14 82 / 0.28);
+    color: oklch(0.94 0.006 75);
+  }
+}
+
+/* ─── Gold gradient text — igual al degradado del logo DZ ─── */
+@layer utilities {
+  .text-gold-gradient {
+    background-image: linear-gradient(
+      135deg,
+      oklch(0.48 0.10 65) 0%,
+      oklch(0.88 0.09 88) 40%,
+      oklch(0.70 0.14 82) 65%,
+      oklch(0.48 0.10 65) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .border-gold-gradient {
+    border-image: linear-gradient(90deg, oklch(0.48 0.10 65), oklch(0.88 0.09 88), oklch(0.48 0.10 65)) 1;
+  }
+}
+
+/* ─── Animaciones de entrada escalonada para el panel DZ ─── */
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease both;
+  }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-450 { animation-delay: 450ms; }
+  .delay-600 { animation-delay: 600ms; }
+  .delay-750 { animation-delay: 750ms; }
+
+  .dz-logo-glow {
+    animation: dzGlow 3s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes dzGlow {
+  from { box-shadow: 0 0 12px oklch(0.70 0.14 82 / 0.3); }
+  to   { box-shadow: 0 0 28px oklch(0.70 0.14 82 / 0.65), 0 0 60px oklch(0.70 0.14 82 / 0.15); }
+}
+
+/* ─── Scrollbar premium oscura con acento dorado ─── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.24 0.007 65);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.70 0.14 82 / 0.6);
+}
