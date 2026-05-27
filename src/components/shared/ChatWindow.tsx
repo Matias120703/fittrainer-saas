@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Send, Loader2 } from 'lucide-react'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { sendMessageAction } from '@/lib/actions/messages'
 import { format, isToday, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -42,7 +42,7 @@ export function ChatWindow({ conversationId, currentUserId, initialMessages }: C
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createBrowserClient()
+  const supabase = getSupabaseClient()
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -61,8 +61,8 @@ export function ChatWindow({ conversationId, currentUserId, initialMessages }: C
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
-          const newMsg = payload.new as Message
+        (payload: { new: Message }) => {
+          const newMsg = payload.new
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev
             return [...prev, newMsg]

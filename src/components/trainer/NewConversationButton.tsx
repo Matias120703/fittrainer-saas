@@ -5,7 +5,7 @@ import { Plus, X, Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { getOrCreateConversation } from '@/lib/actions/messages'
 import { useRouter } from 'next/navigation'
 import type { Client } from '@/lib/types/app.types'
@@ -17,7 +17,7 @@ export function NewConversationButton({ trainerId }: { trainerId: string }) {
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createBrowserClient()
+  const supabase = getSupabaseClient()
 
   useEffect(() => {
     if (!open) return
@@ -28,7 +28,7 @@ export function NewConversationButton({ trainerId }: { trainerId: string }) {
       .eq('trainer_id', trainerId)
       .eq('status', 'active')
       .order('full_name')
-      .then(({ data }) => {
+      .then(({ data }: { data: Client[] | null }) => {
         setClients(data ?? [])
         setLoading(false)
       })

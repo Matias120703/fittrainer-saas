@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Home, Dumbbell, TrendingUp, MessageSquare, Calendar, LogOut, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
@@ -25,7 +25,7 @@ interface ClientSidebarProps {
 export function ClientSidebar({ clientName, clientAvatar }: ClientSidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
-  const supabase = createBrowserClient()
+  const supabase = getSupabaseClient()
   const [collapsed,  setCollapsed]  = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 

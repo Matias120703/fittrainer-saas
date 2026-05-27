@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +20,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const supabase = createBrowserClient()
+      const supabase = getSupabaseClient()
       const { error: signUpError } = await supabase.auth.signUp({ email, password })
 
       if (signUpError) {
