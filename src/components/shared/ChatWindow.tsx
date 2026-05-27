@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Send, Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createBrowserClient } from '@/lib/supabase/client'
 import { sendMessageAction } from '@/lib/actions/messages'
 import { format, isToday, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'

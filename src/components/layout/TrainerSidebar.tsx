@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
   Calendar, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createBrowserClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
