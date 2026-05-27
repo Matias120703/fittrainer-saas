@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ClientSidebar } from '@/components/layout/ClientSidebar'
+import { BottomNav } from '@/components/layout/BottomNav'
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -22,9 +23,11 @@ export default async function ClientLayout({ children }: { children: React.React
         clientName={profile.full_name}
         clientAvatar={profile.avatar_url}
       />
-      <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
+      {/* pb-16 = bottom nav height on mobile */}
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {children}
       </main>
+      <BottomNav />
     </div>
   )
 }
