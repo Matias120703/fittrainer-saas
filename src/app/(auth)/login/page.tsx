@@ -4,51 +4,140 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Loader2, ArrowRight } from 'lucide-react'
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 
 const ease = [0.22, 1, 0.36, 1] as const
 
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-}
-const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease } },
+// ── Animated background ──────────────────────────────────
+function PremiumBackground() {
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none select-none" aria-hidden>
+      <div className="absolute inset-0" style={{ background: 'oklch(0.055 0.007 65)' }} />
+
+      {/* Grid texture */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, oklch(0.72 0.14 82 / 0.025) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.72 0.14 82 / 0.025) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+        }}
+      />
+
+      {/* Gold orb — bottom left */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: 800, height: 800,
+          background: 'radial-gradient(circle, oklch(0.72 0.14 82 / 0.12) 0%, transparent 65%)',
+          bottom: '-28%', left: '-20%',
+        }}
+        animate={{ scale: [1, 1.12, 1], opacity: [0.65, 1, 0.65] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Cool orb — top right */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: 540, height: 540,
+          background: 'radial-gradient(circle, oklch(0.58 0.14 230 / 0.06) 0%, transparent 70%)',
+          top: '-16%', right: '-13%',
+        }}
+        animate={{ scale: [1, 1.14, 1], opacity: [0.45, 0.75, 0.45] }}
+        transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+      />
+
+      {/* Floating center orb */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: 240, height: 240,
+          background: 'radial-gradient(circle, oklch(0.72 0.14 82 / 0.07) 0%, transparent 70%)',
+          top: '13%', left: '50%', marginLeft: -120,
+        }}
+        animate={{ y: [0, -24, 0], opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+      />
+
+      {/* Accent orb — mid right */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: 200, height: 200,
+          background: 'radial-gradient(circle, oklch(0.72 0.14 82 / 0.055) 0%, transparent 70%)',
+          top: '48%', right: '6%',
+        }}
+        animate={{ y: [0, 18, 0], opacity: [0.3, 0.65, 0.3] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 2.5 }}
+      />
+    </div>
+  )
 }
 
+// ── Premium input ────────────────────────────────────────
+function PremiumInput({
+  id, type, value, onChange, placeholder, icon: Icon, rightSlot, required,
+}: {
+  id: string; type: string; value: string
+  onChange: (v: string) => void; placeholder: string
+  icon: React.ElementType; rightSlot?: React.ReactNode; required?: boolean
+}) {
+  return (
+    <div className="relative group">
+      <Icon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/45 transition-colors duration-300 group-focus-within:text-primary/70" />
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        className="peer w-full h-12 pl-11 pr-12 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none transition-all duration-300"
+        style={{
+          background: 'oklch(0.085 0.007 65 / 0.85)',
+          border: '1px solid oklch(0.94 0.006 75 / 0.07)',
+          boxShadow: 'none',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.border = '1px solid oklch(0.72 0.14 82 / 0.5)'
+          e.currentTarget.style.boxShadow = '0 0 0 3px oklch(0.72 0.14 82 / 0.08), inset 0 1px 0 oklch(0.72 0.14 82 / 0.04)'
+          e.currentTarget.style.background = 'oklch(0.095 0.007 65 / 0.9)'
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.border = '1px solid oklch(0.94 0.006 75 / 0.07)'
+          e.currentTarget.style.boxShadow = 'none'
+          e.currentTarget.style.background = 'oklch(0.085 0.007 65 / 0.85)'
+        }}
+      />
+      {rightSlot && (
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2">{rightSlot}</div>
+      )}
+    </div>
+  )
+}
+
+// ── Page ─────────────────────────────────────────────────
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail]               = useState('')
+  const [password, setPassword]         = useState('')
+  const [error, setError]               = useState('')
+  const [loading, setLoading]           = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
       const supabase = getSupabaseClient()
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-
-      if (authError) {
-        setError(authError.message)
-        setLoading(false)
-        return
-      }
+      if (authError) { setError(authError.message); setLoading(false); return }
 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       window.location.href = profile?.role === 'trainer' ? '/dashboard' : '/home'
     } catch (err) {
       console.error('Login error:', err)
@@ -58,206 +147,180 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-5 py-14 overflow-x-hidden">
+      <PremiumBackground />
 
-      {/* ── Left panel (desktop) ── */}
-      <motion.div
-        initial={{ opacity: 0, x: -32 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease }}
-        className="relative hidden lg:flex lg:w-[480px] xl:w-[560px] shrink-0 flex-col justify-between overflow-hidden p-14"
-        style={{ background: 'oklch(0.055 0.007 65)' }}
-      >
-        {/* Grid texture */}
-        <div className="pointer-events-none absolute inset-0" style={{
-          backgroundImage: 'linear-gradient(to right, oklch(0.72 0.14 82 / 0.04) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.72 0.14 82 / 0.04) 1px, transparent 1px)',
-          backgroundSize: '52px 52px',
-        }} />
-        {/* Gold glows */}
-        <div className="pointer-events-none absolute bottom-0 left-0 h-[520px] w-[520px] -translate-x-1/3 translate-y-1/3 rounded-full blur-[140px]" style={{ background: 'oklch(0.72 0.14 82 / 0.13)' }} />
-        <div className="pointer-events-none absolute top-0 right-0 h-[280px] w-[280px] translate-x-1/3 -translate-y-1/3 rounded-full blur-[100px]" style={{ background: 'oklch(0.72 0.14 82 / 0.06)' }} />
+      <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
 
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.6, ease }}
-          className="relative z-10 flex items-center gap-3"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl dz-logo-glow" style={{ background: 'linear-gradient(135deg, oklch(0.48 0.10 65), oklch(0.88 0.09 88) 50%, oklch(0.48 0.10 65))' }}>
-            <span className="text-[14px] font-black" style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.08 0.006 65)' }}>DZ</span>
-          </div>
-          <span className="text-[13px] font-black uppercase tracking-widest text-gold-gradient" style={{ fontFamily: 'var(--font-heading)' }}>FitTrainer</span>
-        </motion.div>
-
-        {/* Hero text */}
-        <div className="relative z-10">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.6 }}
-            className="mb-5 text-[10px] font-bold uppercase tracking-[0.28em]"
-            style={{ color: 'oklch(0.72 0.14 82 / 0.55)' }}
-          >
-            Lic. Danny Domínguez — Fisioterapia y Kinesiología
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.8, ease }}
-            className="text-[64px] xl:text-[76px] font-black italic uppercase leading-[0.87] tracking-tight text-gold-gradient"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            TRABAJO<br />DURO.<br />CIENCIA.<br />RESULTADOS.
-          </motion.h1>
+        {/* ── Logo hero ── */}
+        <div className="mb-9 flex flex-col items-center gap-3">
           <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.75, duration: 0.5, ease }}
-            style={{ transformOrigin: 'left', background: 'linear-gradient(90deg, oklch(0.88 0.09 88 / 0.8), oklch(0.48 0.10 65 / 0.3))' }}
-            className="mt-7 mb-6 h-px w-20"
-          />
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.85, duration: 0.6 }}
-            className="text-[14px] font-medium leading-relaxed"
-            style={{ color: 'oklch(0.94 0.006 75 / 0.50)' }}
+            initial={{ scale: 0.5, opacity: 0, rotate: -8 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', damping: 9, stiffness: 130, delay: 0.05 }}
+            className="relative flex h-[76px] w-[76px] items-center justify-center rounded-[20px] dz-logo-glow"
+            style={{
+              background: 'linear-gradient(145deg, oklch(0.42 0.10 63) 0%, oklch(0.88 0.10 88) 48%, oklch(0.60 0.14 80) 72%, oklch(0.42 0.10 63) 100%)',
+            }}
           >
-            "Me dedico al entrenamiento de musculación con más de 13 años de experiencia."
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.95, duration: 0.6, ease }}
-            className="mt-8 flex gap-10"
-          >
-            {[{ n: '13+', label: 'Años exp.' }, { n: '250+', label: 'Alumnos' }, { n: '10', label: 'Países' }].map(({ n, label }) => (
-              <div key={label}>
-                <p className="text-[28px] font-black text-gold-gradient" style={{ fontFamily: 'var(--font-heading)' }}>{n}</p>
-                <p className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: 'oklch(0.94 0.006 75 / 0.38)' }}>{label}</p>
-              </div>
-            ))}
+            <div
+              className="absolute inset-[3.5px] rounded-[15px] opacity-25"
+              style={{ border: '1px solid oklch(0.06 0.006 65)' }}
+            />
+            <span
+              className="relative text-[28px] font-black italic leading-none"
+              style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.055 0.006 65)', letterSpacing: '-0.02em' }}
+            >
+              ZD
+            </span>
           </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.65, ease }}
+            className="text-[54px] sm:text-[62px] font-black italic uppercase leading-none text-gold-gradient"
+            style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.025em' }}
+          >
+            ZD FITNESS
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 0.42, y: 0 }}
+            transition={{ delay: 0.52, duration: 0.9 }}
+            className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-foreground text-center leading-relaxed"
+          >
+            Entrenamiento personalizado de alto nivel
+          </motion.p>
+
+          <motion.div
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ delay: 0.68, duration: 0.8, ease }}
+            className="w-20 h-px mt-1"
+            style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.14 82 / 0.55), transparent)' }}
+          />
         </div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.6 }}
-          className="relative z-10 text-[10px] uppercase tracking-[0.2em]"
-          style={{ color: 'oklch(0.72 0.14 82 / 0.28)', fontFamily: 'var(--font-heading)' }}
-        >
-          DZ Fitness Club · Desde 2014
-        </motion.p>
-      </motion.div>
-
-      {/* ── Right panel — form ── */}
-      <div className="flex flex-1 items-center justify-center px-6 py-16 md:px-10">
+        {/* ── Glass card ── */}
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="w-full max-w-[380px]"
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.38, duration: 0.7, ease }}
+          className="w-full rounded-3xl p-7 sm:p-8"
+          style={{
+            background: 'oklch(0.11 0.007 65 / 0.80)',
+            backdropFilter: 'blur(36px)',
+            WebkitBackdropFilter: 'blur(36px)',
+            border: '1px solid oklch(0.94 0.006 75 / 0.08)',
+            boxShadow: '0 40px 100px oklch(0 0 0 / 0.5), 0 0 50px oklch(0.72 0.14 82 / 0.07), 0 0 0 1px oklch(0.72 0.14 82 / 0.05)',
+          }}
         >
-          {/* Mobile logo */}
-          <motion.div variants={itemVariants} className="mb-10 flex items-center gap-3 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl dz-logo-glow" style={{ background: 'linear-gradient(135deg, oklch(0.48 0.10 65), oklch(0.88 0.09 88) 50%, oklch(0.48 0.10 65))' }}>
-              <span className="text-[12px] font-black" style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.08 0.006 65)' }}>DZ</span>
-            </div>
-            <span className="text-[13px] font-black uppercase tracking-widest text-gold-gradient" style={{ fontFamily: 'var(--font-heading)' }}>FitTrainer</span>
-          </motion.div>
+          <div className="mb-6">
+            <h2 className="text-[22px] font-bold text-foreground">Iniciar sesión</h2>
+            <p className="mt-1 text-sm text-muted-foreground/70">Ingresá tus credenciales para continuar.</p>
+          </div>
 
-          <motion.h2
-            variants={itemVariants}
-            className="text-[42px] font-black italic uppercase leading-tight"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            Bienvenido
-          </motion.h2>
-          <motion.p variants={itemVariants} className="mt-1.5 text-sm text-muted-foreground">
-            Iniciá sesión para continuar.
-          </motion.p>
-
-          <motion.div
-            variants={itemVariants}
-            className="my-6 h-px w-12"
-            style={{ background: 'linear-gradient(90deg, oklch(0.88 0.09 88 / 0.9), oklch(0.48 0.10 65 / 0.3))' }}
-          />
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <motion.div variants={itemVariants} className="space-y-1.5">
-              <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 rounded-xl bg-card border-border text-sm focus-visible:ring-primary/60 transition-shadow"
+          <form onSubmit={handleLogin} className="space-y-3.5">
+            <motion.div
+              className="space-y-1.5"
+              initial={{ opacity: 0, x: -14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.55, duration: 0.5, ease }}
+            >
+              <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
+                Correo electrónico
+              </label>
+              <PremiumInput
+                id="email" type="email" value={email} onChange={setEmail}
+                placeholder="tu@email.com" icon={Mail} required
               />
             </motion.div>
 
-            <motion.div variants={itemVariants} className="space-y-1.5">
-              <Label htmlFor="password" className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <motion.div
+              className="space-y-1.5"
+              initial={{ opacity: 0, x: -14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.62, duration: 0.5, ease }}
+            >
+              <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
                 Contraseña
-              </Label>
-              <Input
+              </label>
+              <PremiumInput
                 id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12 rounded-xl bg-card border-border text-sm focus-visible:ring-primary/60 transition-shadow"
+                type={showPassword ? 'text' : 'password'}
+                value={password} onChange={setPassword}
+                placeholder="••••••••" icon={Lock} required
+                rightSlot={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-muted-foreground/40 hover:text-muted-foreground/80 transition-colors duration-200"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                }
               />
             </motion.div>
 
             <AnimatePresence>
               {error && (
                 <motion.p
-                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  initial={{ opacity: 0, y: -5, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.97 }}
-                  className="rounded-xl border border-destructive/20 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+                  className="rounded-xl border border-destructive/20 bg-destructive/[0.08] px-3.5 py-2.5 text-sm text-destructive"
                 >
                   {error}
                 </motion.p>
               )}
             </AnimatePresence>
 
-            <motion.div variants={itemVariants}>
+            <motion.div
+              className="pt-1"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.72, duration: 0.5, ease }}
+            >
               <motion.button
                 type="submit"
                 disabled={loading}
-                whileHover={{ scale: 1.015, boxShadow: '0 0 28px oklch(0.72 0.14 82 / 0.3)' }}
-                whileTap={{ scale: 0.98 }}
-                className="relative w-full h-12 rounded-xl text-[13px] font-bold uppercase tracking-wider overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
-                style={{
-                  background: 'linear-gradient(135deg, oklch(0.52 0.11 70) 0%, oklch(0.80 0.14 88) 50%, oklch(0.52 0.11 70) 100%)',
-                  color: 'oklch(0.08 0.006 65)',
-                }}
+                whileHover={{ scale: 1.015, boxShadow: '0 0 36px oklch(0.72 0.14 82 / 0.38)' }}
+                whileTap={{ scale: 0.975 }}
+                className="btn-gold w-full h-12 rounded-xl text-[13px] font-bold uppercase tracking-wider disabled:opacity-55 transition-opacity"
               >
-                <span className="flex items-center justify-center gap-2">
-                  {loading
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <><span>Iniciar sesión</span><ArrowRight className="h-4 w-4" /></>
-                  }
-                </span>
+                {loading
+                  ? <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  : <span className="flex items-center justify-center gap-2">Ingresar <ArrowRight className="h-4 w-4" /></span>
+                }
               </motion.button>
             </motion.div>
           </form>
 
-          <motion.p variants={itemVariants} className="mt-7 text-center text-sm text-muted-foreground">
+          <div
+            className="my-5 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, oklch(0.94 0.006 75 / 0.07), transparent)' }}
+          />
+
+          <p className="text-center text-sm text-muted-foreground/60">
             ¿No tienes cuenta?{' '}
-            <Link href="/register" className="font-semibold text-primary hover:underline underline-offset-4 transition-colors">
-              Regístrate
+            <Link href="/register" className="font-semibold text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors">
+              Solicitar acceso
             </Link>
-          </motion.p>
+          </p>
         </motion.div>
+
+        {/* ── Footer ── */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.28 }}
+          transition={{ delay: 1.0, duration: 1.2 }}
+          className="mt-8 text-[10px] uppercase tracking-[0.22em] text-muted-foreground text-center"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          ZD FITNESS · Est. 2014
+        </motion.p>
       </div>
     </div>
   )
