@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { Loader2, User, Mail, Lock, Eye, EyeOff, ArrowRight, Clock } from 'lucide-react'
+import { notifyTrainerNewRegistration } from '@/lib/actions/notifications'
 
 const ease = [0.22, 1, 0.36, 1] as const
 
@@ -133,6 +134,13 @@ export default function RegisterPage() {
       // Set status to pending (profile is created by DB trigger synchronously)
       if (data.user) {
         await supabase.from('profiles').update({ status: 'pending' }).eq('id', data.user.id)
+      }
+
+      // Notify trainer — non-critical, failure doesn't affect registration
+      try {
+        await notifyTrainerNewRegistration(fullName, email)
+      } catch {
+        console.warn('[register] Notificación al entrenador no enviada')
       }
 
       setRegistered(true)
