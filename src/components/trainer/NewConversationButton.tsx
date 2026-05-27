@@ -17,7 +17,7 @@ export function NewConversationButton({ trainerId }: { trainerId: string }) {
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = createBrowserClient()
 
   useEffect(() => {
     if (!open) return

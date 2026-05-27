@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Loader2, Dumbbell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createClient as createSupabaseClient } from '@/lib/supabase/client'
+import { createBrowserClient } from '@/lib/supabase/client'
 import type { Routine } from '@/lib/types/app.types'
 import { useRouter } from 'next/navigation'
 
@@ -18,7 +18,7 @@ export function AssignRoutineButton({ clientId, trainerId }: AssignRoutineButton
   const [loading, setLoading] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const router = useRouter()
-  const supabase = createSupabaseClient()
+  const supabase = createBrowserClient()
 
   useEffect(() => {
     if (!open) return

@@ -42,7 +42,7 @@ export function ChatWindow({ conversationId, currentUserId, initialMessages }: C
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
+  const supabase = createBrowserClient()
 
   // Scroll to bottom on new messages
   useEffect(() => {

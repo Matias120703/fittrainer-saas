@@ -28,7 +28,7 @@ interface TrainerSidebarProps {
 export function TrainerSidebar({ trainerName, trainerAvatar }: TrainerSidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
-  const supabase = createClient()
+  const supabase = createBrowserClient()
   const [collapsed,   setCollapsed]   = useState(false)
   const [mobileOpen,  setMobileOpen]  = useState(false)
 
