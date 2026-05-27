@@ -31,6 +31,7 @@ export type ConversationWithDetails = Conversation & {
 }
 
 export type UserRole = 'trainer' | 'client'
+export type ProfileStatus = 'pending' | 'approved' | 'rejected'
 
 export type AuthUser = {
   id: string

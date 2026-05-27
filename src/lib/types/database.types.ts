@@ -9,6 +9,7 @@ export type Database = {
           role: 'trainer' | 'client'
           full_name: string
           avatar_url: string | null
+          status: 'pending' | 'approved' | 'rejected'
           created_at: string
         }
         Insert: {
@@ -16,6 +17,7 @@ export type Database = {
           role: 'trainer' | 'client'
           full_name: string
           avatar_url?: string | null
+          status?: 'pending' | 'approved' | 'rejected'
           created_at?: string
         }
         Update: {
@@ -23,6 +25,7 @@ export type Database = {
           role?: 'trainer' | 'client'
           full_name?: string
           avatar_url?: string | null
+          status?: 'pending' | 'approved' | 'rejected'
           created_at?: string
         }
         Relationships: []

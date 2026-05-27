@@ -4,11 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { Loader2, User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Loader2, User, Mail, Lock, Eye, EyeOff, ArrowRight, Clock } from 'lucide-react'
 
 const ease = [0.22, 1, 0.36, 1] as const
-type Role = 'trainer' | 'client'
 
 // ── Background ───────────────────────────────────────────
 function PremiumBackground() {
@@ -114,10 +112,10 @@ export default function RegisterPage() {
   const [fullName, setFullName]         = useState('')
   const [email, setEmail]               = useState('')
   const [password, setPassword]         = useState('')
-  const [role, setRole]                 = useState<Role>('client')
   const [error, setError]               = useState('')
   const [loading, setLoading]           = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [registered, setRegistered]     = useState(false)
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
@@ -125,13 +123,19 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const supabase = getSupabaseClient()
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName, role } },
+        options: { data: { full_name: fullName, role: 'client' } },
       })
-      if (signUpError) { console.error('signUp error:', signUpError); setError(signUpError.message); setLoading(false); return }
-      window.location.href = '/login'
+      if (signUpError) { setError(signUpError.message); setLoading(false); return }
+
+      // Set status to pending (profile is created by DB trigger synchronously)
+      if (data.user) {
+        await supabase.from('profiles').update({ status: 'pending' }).eq('id', data.user.id)
+      }
+
+      setRegistered(true)
     } catch (err) {
       console.error('handleRegister error:', err)
       setError(err instanceof Error ? err.message : 'Error inesperado.')
@@ -146,26 +150,32 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
 
         {/* ── Logo hero ── */}
-        <div className="mb-8 flex flex-col items-center gap-3">
+        <div className="mb-10 flex flex-col items-center gap-4">
+          {/* Floating wrapper */}
           <motion.div
-            initial={{ scale: 0.5, opacity: 0, rotate: -8 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={{ type: 'spring', damping: 9, stiffness: 130, delay: 0.05 }}
-            className="relative flex h-[72px] w-[72px] items-center justify-center rounded-[20px] dz-logo-glow"
-            style={{
-              background: 'linear-gradient(145deg, oklch(0.42 0.10 63) 0%, oklch(0.88 0.10 88) 48%, oklch(0.60 0.14 80) 72%, oklch(0.42 0.10 63) 100%)',
-            }}
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
           >
-            <div
-              className="absolute inset-[3.5px] rounded-[15px] opacity-25"
-              style={{ border: '1px solid oklch(0.06 0.006 65)' }}
-            />
-            <span
-              className="relative text-[26px] font-black italic leading-none"
-              style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.055 0.006 65)', letterSpacing: '-0.02em' }}
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, rotate: -8 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ type: 'spring', damping: 9, stiffness: 130, delay: 0.05 }}
+              className="relative flex h-[76px] w-[76px] items-center justify-center rounded-[22px] dz-logo-glow"
+              style={{
+                background: 'linear-gradient(145deg, oklch(0.42 0.10 63) 0%, oklch(0.88 0.10 88) 48%, oklch(0.60 0.14 80) 72%, oklch(0.42 0.10 63) 100%)',
+              }}
             >
-              ZD
-            </span>
+              <div
+                className="absolute inset-[3.5px] rounded-[17px] opacity-25"
+                style={{ border: '1px solid oklch(0.06 0.006 65)' }}
+              />
+              <span
+                className="relative text-[28px] font-black italic leading-none"
+                style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.055 0.006 65)', letterSpacing: '-0.02em' }}
+              >
+                ZD
+              </span>
+            </motion.div>
           </motion.div>
 
           <motion.h1
@@ -187,13 +197,17 @@ export default function RegisterPage() {
             Tu mejor versión empieza hoy
           </motion.p>
 
+          {/* Diamond ornament divider */}
           <motion.div
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ delay: 0.65, duration: 0.8, ease }}
-            className="w-20 h-px mt-1"
-            style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.14 82 / 0.55), transparent)' }}
-          />
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.9 }}
+            className="flex items-center gap-2.5 mt-0.5"
+          >
+            <div className="h-px w-12" style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.14 82 / 0.45))' }} />
+            <div className="w-1.5 h-1.5 rotate-45 rounded-[1px]" style={{ background: 'oklch(0.72 0.14 82 / 0.55)' }} />
+            <div className="h-px w-12" style={{ background: 'linear-gradient(90deg, oklch(0.72 0.14 82 / 0.45), transparent)' }} />
+          </motion.div>
         </div>
 
         {/* ── Glass card ── */}
@@ -201,7 +215,7 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.38, duration: 0.7, ease }}
-          className="w-full rounded-3xl p-7 sm:p-8"
+          className="w-full rounded-3xl"
           style={{
             background: 'oklch(0.11 0.007 65 / 0.80)',
             backdropFilter: 'blur(36px)',
@@ -210,140 +224,204 @@ export default function RegisterPage() {
             boxShadow: '0 40px 100px oklch(0 0 0 / 0.5), 0 0 50px oklch(0.72 0.14 82 / 0.07), 0 0 0 1px oklch(0.72 0.14 82 / 0.05)',
           }}
         >
-          <div className="mb-5">
-            <h2 className="text-[22px] font-bold text-foreground">Crear cuenta</h2>
-            <p className="mt-1 text-sm text-muted-foreground/70">Completá tus datos para registrarte.</p>
-          </div>
-
-          {/* Role selector */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.48, duration: 0.5, ease }}
-            className="mb-5 grid grid-cols-2 gap-1 rounded-2xl p-1"
-            style={{ background: 'oklch(0.08 0.007 65 / 0.8)', border: '1px solid oklch(0.94 0.006 75 / 0.06)' }}
-          >
-            {(['trainer', 'client'] as Role[]).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                className={cn(
-                  'relative rounded-xl py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all duration-200',
-                  role === r ? 'text-primary-foreground' : 'text-muted-foreground/60 hover:text-muted-foreground'
-                )}
-                style={role === r ? {
-                  background: 'linear-gradient(135deg, oklch(0.44 0.10 63), oklch(0.82 0.14 88) 50%, oklch(0.44 0.10 63))',
-                  color: 'oklch(0.06 0.006 65)',
-                  boxShadow: '0 0 16px oklch(0.72 0.14 82 / 0.28)',
-                } : {}}
+          <AnimatePresence mode="wait">
+            {!registered ? (
+              /* ── Registration form ── */
+              <motion.div
+                key="form"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.3 }}
+                className="p-7 sm:p-8"
               >
-                {r === 'trainer' ? 'Entrenador' : 'Cliente'}
-              </button>
-            ))}
-          </motion.div>
+                <div className="mb-5">
+                  <h2 className="text-[22px] font-bold text-foreground">Crear cuenta</h2>
+                  <p className="mt-1 text-sm text-muted-foreground/70">
+                    Completá tus datos para solicitar acceso.
+                  </p>
+                </div>
 
-          <form onSubmit={handleRegister} className="space-y-3.5">
-            <motion.div
-              className="space-y-1.5"
-              initial={{ opacity: 0, x: -14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.55, duration: 0.5, ease }}
-            >
-              <label htmlFor="fullName" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
-                Nombre y apellido
-              </label>
-              <PremiumInput
-                id="fullName" value={fullName} onChange={setFullName}
-                placeholder="Danny Domínguez" icon={User} required
-              />
-            </motion.div>
-
-            <motion.div
-              className="space-y-1.5"
-              initial={{ opacity: 0, x: -14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.62, duration: 0.5, ease }}
-            >
-              <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
-                Correo electrónico
-              </label>
-              <PremiumInput
-                id="email" type="email" value={email} onChange={setEmail}
-                placeholder="tu@email.com" icon={Mail} required
-              />
-            </motion.div>
-
-            <motion.div
-              className="space-y-1.5"
-              initial={{ opacity: 0, x: -14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.69, duration: 0.5, ease }}
-            >
-              <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
-                Contraseña
-              </label>
-              <PremiumInput
-                id="password" type={showPassword ? 'text' : 'password'}
-                value={password} onChange={setPassword}
-                placeholder="Mínimo 6 caracteres" icon={Lock} required
-                rightSlot={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-muted-foreground/40 hover:text-muted-foreground/80 transition-colors duration-200"
+                <form onSubmit={handleRegister} className="space-y-3.5">
+                  <motion.div
+                    className="space-y-1.5"
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5, ease }}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                }
-              />
-            </motion.div>
+                    <label htmlFor="fullName" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
+                      Nombre y apellido
+                    </label>
+                    <PremiumInput
+                      id="fullName" value={fullName} onChange={setFullName}
+                      placeholder="Tu nombre completo" icon={User} required
+                    />
+                  </motion.div>
 
-            <AnimatePresence>
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  className="rounded-xl border border-destructive/20 bg-destructive/[0.08] px-3.5 py-2.5 text-sm text-destructive"
-                >
-                  {error}
-                </motion.p>
-              )}
-            </AnimatePresence>
+                  <motion.div
+                    className="space-y-1.5"
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.57, duration: 0.5, ease }}
+                  >
+                    <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
+                      Correo electrónico
+                    </label>
+                    <PremiumInput
+                      id="email" type="email" value={email} onChange={setEmail}
+                      placeholder="tu@email.com" icon={Mail} required
+                    />
+                  </motion.div>
 
-            <motion.div
-              className="pt-1"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.78, duration: 0.5, ease }}
-            >
-              <motion.button
-                type="submit"
-                disabled={loading}
-                whileHover={{ scale: 1.015, boxShadow: '0 0 36px oklch(0.72 0.14 82 / 0.38)' }}
-                whileTap={{ scale: 0.975 }}
-                className="btn-gold w-full h-12 rounded-xl text-[13px] font-bold uppercase tracking-wider disabled:opacity-55 transition-opacity"
+                  <motion.div
+                    className="space-y-1.5"
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.64, duration: 0.5, ease }}
+                  >
+                    <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/60">
+                      Contraseña
+                    </label>
+                    <PremiumInput
+                      id="password" type={showPassword ? 'text' : 'password'}
+                      value={password} onChange={setPassword}
+                      placeholder="Mínimo 6 caracteres" icon={Lock} required
+                      rightSlot={
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="text-muted-foreground/40 hover:text-muted-foreground/80 transition-colors duration-200"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      }
+                    />
+                  </motion.div>
+
+                  <AnimatePresence>
+                    {error && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -5, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        className="rounded-xl border border-destructive/20 bg-destructive/[0.08] px-3.5 py-2.5 text-sm text-destructive"
+                      >
+                        {error}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+
+                  <motion.div
+                    className="pt-1"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.74, duration: 0.5, ease }}
+                  >
+                    <motion.button
+                      type="submit"
+                      disabled={loading}
+                      whileHover={{ scale: 1.015, boxShadow: '0 0 36px oklch(0.72 0.14 82 / 0.38)' }}
+                      whileTap={{ scale: 0.975 }}
+                      className="btn-gold w-full h-12 rounded-xl text-[13px] font-bold uppercase tracking-wider disabled:opacity-55 transition-opacity"
+                    >
+                      {loading
+                        ? <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                        : <span className="flex items-center justify-center gap-2">Solicitar acceso <ArrowRight className="h-4 w-4" /></span>
+                      }
+                    </motion.button>
+                  </motion.div>
+                </form>
+
+                <div
+                  className="my-5 h-px"
+                  style={{ background: 'linear-gradient(90deg, transparent, oklch(0.94 0.006 75 / 0.07), transparent)' }}
+                />
+
+                <p className="text-center text-sm text-muted-foreground/60">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link href="/login" className="font-semibold text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors">
+                    Iniciar sesión
+                  </Link>
+                </p>
+              </motion.div>
+            ) : (
+              /* ── Pending success screen ── */
+              <motion.div
+                key="pending"
+                initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, ease }}
+                className="p-8 sm:p-10 flex flex-col items-center text-center"
               >
-                {loading
-                  ? <Loader2 className="mx-auto h-5 w-5 animate-spin" />
-                  : <span className="flex items-center justify-center gap-2">Crear cuenta <ArrowRight className="h-4 w-4" /></span>
-                }
-              </motion.button>
-            </motion.div>
-          </form>
+                {/* Animated clock icon */}
+                <div className="relative mb-6 flex h-[72px] w-[72px] items-center justify-center">
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'conic-gradient(oklch(0.72 0.14 82) 0%, transparent 60%, oklch(0.72 0.14 82 / 0.25) 80%, transparent 100%)',
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <div
+                    className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full"
+                    style={{ background: 'oklch(0.10 0.007 65)' }}
+                  >
+                    <Clock className="h-6 w-6" style={{ color: 'oklch(0.72 0.14 82)' }} />
+                  </div>
+                </div>
 
-          <div
-            className="my-5 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, oklch(0.94 0.006 75 / 0.07), transparent)' }}
-          />
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5, ease }}
+                  className="text-[22px] font-bold text-foreground mb-2"
+                >
+                  Solicitud enviada
+                </motion.h2>
 
-          <p className="text-center text-sm text-muted-foreground/60">
-            ¿Ya tienes cuenta?{' '}
-            <Link href="/login" className="font-semibold text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors">
-              Iniciar sesión
-            </Link>
-          </p>
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 0.7, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="text-sm text-muted-foreground leading-relaxed mb-5"
+                >
+                  El entrenador revisará tu solicitud y aprobará tu acceso en breve.
+                  Recibirás confirmación cuando puedas ingresar.
+                </motion.p>
+
+                {/* Email display */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="w-full mb-6 rounded-xl px-4 py-3"
+                  style={{
+                    background: 'oklch(0.085 0.007 65 / 0.8)',
+                    border: '1px solid oklch(0.94 0.006 75 / 0.07)',
+                  }}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-muted-foreground/50 mb-1">
+                    Cuenta registrada
+                  </p>
+                  <p className="text-sm font-medium text-foreground truncate">{email}</p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2 text-[13px] font-semibold text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
+                  >
+                    Volver al inicio <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* ── Footer ── */}

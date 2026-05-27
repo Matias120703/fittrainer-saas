@@ -13,8 +13,6 @@ function PremiumBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none select-none" aria-hidden>
       <div className="absolute inset-0" style={{ background: 'oklch(0.055 0.007 65)' }} />
-
-      {/* Grid texture */}
       <div
         className="absolute inset-0"
         style={{
@@ -23,8 +21,6 @@ function PremiumBackground() {
           backgroundSize: '64px 64px',
         }}
       />
-
-      {/* Gold orb — bottom left */}
       <motion.div
         className="absolute rounded-full"
         style={{
@@ -35,8 +31,6 @@ function PremiumBackground() {
         animate={{ scale: [1, 1.12, 1], opacity: [0.65, 1, 0.65] }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
-
-      {/* Cool orb — top right */}
       <motion.div
         className="absolute rounded-full"
         style={{
@@ -47,8 +41,6 @@ function PremiumBackground() {
         animate={{ scale: [1, 1.14, 1], opacity: [0.45, 0.75, 0.45] }}
         transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
       />
-
-      {/* Floating center orb */}
       <motion.div
         className="absolute rounded-full"
         style={{
@@ -59,8 +51,6 @@ function PremiumBackground() {
         animate={{ y: [0, -24, 0], opacity: [0.5, 0.9, 0.5] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
-
-      {/* Accent orb — mid right */}
       <motion.div
         className="absolute rounded-full"
         style={{
@@ -137,7 +127,23 @@ export default function LoginPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, status')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.status === 'pending') {
+        window.location.href = '/pending'
+        return
+      }
+
+      if (profile?.status === 'rejected') {
+        setError('Tu acceso fue rechazado. Contacta al entrenador para más información.')
+        setLoading(false)
+        return
+      }
+
       window.location.href = profile?.role === 'trainer' ? '/dashboard' : '/home'
     } catch (err) {
       console.error('Login error:', err)
@@ -153,26 +159,32 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
 
         {/* ── Logo hero ── */}
-        <div className="mb-9 flex flex-col items-center gap-3">
+        <div className="mb-11 flex flex-col items-center gap-4">
+          {/* Floating wrapper */}
           <motion.div
-            initial={{ scale: 0.5, opacity: 0, rotate: -8 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={{ type: 'spring', damping: 9, stiffness: 130, delay: 0.05 }}
-            className="relative flex h-[76px] w-[76px] items-center justify-center rounded-[20px] dz-logo-glow"
-            style={{
-              background: 'linear-gradient(145deg, oklch(0.42 0.10 63) 0%, oklch(0.88 0.10 88) 48%, oklch(0.60 0.14 80) 72%, oklch(0.42 0.10 63) 100%)',
-            }}
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
           >
-            <div
-              className="absolute inset-[3.5px] rounded-[15px] opacity-25"
-              style={{ border: '1px solid oklch(0.06 0.006 65)' }}
-            />
-            <span
-              className="relative text-[28px] font-black italic leading-none"
-              style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.055 0.006 65)', letterSpacing: '-0.02em' }}
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, rotate: -8 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ type: 'spring', damping: 9, stiffness: 130, delay: 0.05 }}
+              className="relative flex h-[80px] w-[80px] items-center justify-center rounded-[22px] dz-logo-glow"
+              style={{
+                background: 'linear-gradient(145deg, oklch(0.42 0.10 63) 0%, oklch(0.88 0.10 88) 48%, oklch(0.60 0.14 80) 72%, oklch(0.42 0.10 63) 100%)',
+              }}
             >
-              ZD
-            </span>
+              <div
+                className="absolute inset-[3.5px] rounded-[17px] opacity-25"
+                style={{ border: '1px solid oklch(0.06 0.006 65)' }}
+              />
+              <span
+                className="relative text-[30px] font-black italic leading-none"
+                style={{ fontFamily: 'var(--font-heading)', color: 'oklch(0.055 0.006 65)', letterSpacing: '-0.02em' }}
+              >
+                ZD
+              </span>
+            </motion.div>
           </motion.div>
 
           <motion.h1
@@ -194,13 +206,17 @@ export default function LoginPage() {
             Entrenamiento personalizado de alto nivel
           </motion.p>
 
+          {/* Diamond ornament divider */}
           <motion.div
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ delay: 0.68, duration: 0.8, ease }}
-            className="w-20 h-px mt-1"
-            style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.14 82 / 0.55), transparent)' }}
-          />
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.9 }}
+            className="flex items-center gap-2.5 mt-0.5"
+          >
+            <div className="h-px w-12" style={{ background: 'linear-gradient(90deg, transparent, oklch(0.72 0.14 82 / 0.45))' }} />
+            <div className="w-1.5 h-1.5 rotate-45 rounded-[1px]" style={{ background: 'oklch(0.72 0.14 82 / 0.55)' }} />
+            <div className="h-px w-12" style={{ background: 'linear-gradient(90deg, oklch(0.72 0.14 82 / 0.45), transparent)' }} />
+          </motion.div>
         </div>
 
         {/* ── Glass card ── */}

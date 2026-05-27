@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Users, Search, Plus } from 'lucide-react'
+import { Users, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { CreateClientButton } from '@/components/trainer/CreateClientButton'
+import { PendingRequests } from '@/components/trainer/PendingRequests'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; status?: string }>
@@ -18,6 +19,7 @@ export default async function ClientsPage({ searchParams }: PageProps) {
 
   const { q, status } = await searchParams
 
+  // Active clients from the clients table
   let query = supabase
     .from('clients')
     .select('id, full_name, email, phone, goal, status, plan_type, weight_kg, height_cm, created_at')
@@ -27,7 +29,16 @@ export default async function ClientsPage({ searchParams }: PageProps) {
   if (q) query = query.ilike('full_name', `%${q}%`)
   if (status && status !== 'all') query = query.eq('status', status as 'active' | 'inactive' | 'paused')
 
-  const { data: clients } = await query
+  // Pending profile registrations (new users awaiting approval)
+  const [{ data: clients }, { data: pendingProfiles }] = await Promise.all([
+    query,
+    supabase
+      .from('profiles')
+      .select('id, full_name, created_at')
+      .eq('role', 'client')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+  ])
 
   const statusCounts = {
     all: clients?.length ?? 0,
@@ -50,10 +61,19 @@ export default async function ClientsPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-semibold text-foreground">Clientes</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {statusCounts.all} clientes en total
+            {(pendingProfiles?.length ?? 0) > 0 && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                style={{ background: 'oklch(0.72 0.14 82 / 0.15)', color: 'oklch(0.72 0.14 82)' }}>
+                {pendingProfiles!.length} pendiente{pendingProfiles!.length > 1 ? 's' : ''}
+              </span>
+            )}
           </p>
         </div>
         <CreateClientButton />
       </div>
+
+      {/* Pending requests */}
+      <PendingRequests pending={pendingProfiles ?? []} />
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
